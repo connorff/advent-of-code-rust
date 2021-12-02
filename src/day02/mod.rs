@@ -1,39 +1,45 @@
 use std::{fs, ops::Index};
 
+type MvFn = fn(i32, Vec<i32>) -> Vec<i32>;
+pub fn get_moved<'a, T>(size: usize, commands: T, forward: MvFn, up: MvFn, down: MvFn) -> Vec<i32>
+where
+    T: Iterator<Item = Vec<&'a str>>,
+{
+    commands.fold(vec![0; size], |res, cmd| {
+        let delta = cmd.index(1).parse::<i32>().unwrap();
+
+        let point = match cmd.index(0) {
+            &"forward" => forward(delta, res.clone()),
+            &"up" => up(delta, res.clone()),
+            &"down" => down(delta, res.clone()),
+            _ => vec![0; size],
+        };
+
+        point.iter().zip(res.iter()).map(|(&b, &v)| b + v).collect()
+    })
+}
+
 pub fn travel() -> (i32, i32) {
     let data = fs::read_to_string("src/day02/inputs.txt").expect("Unable to read file");
     let split_commands = data
         .split('\n')
         .map(|cmd| cmd.split(' ').collect::<Vec<&str>>());
 
-    let total_moved = split_commands.clone().fold((0, 0), |res, cmd| {
-        let delta = cmd.index(1).parse::<i32>().unwrap();
+    let moved = get_moved(
+        2,
+        split_commands.clone(),
+        |d, _| vec![d, 0],
+        |d, _| vec![0, -d],
+        |d, _| vec![0, d],
+    );
 
-        let point = match cmd.index(0) {
-            &"forward" => (delta, 0),
-            &"up" => (0, -delta),
-            &"down" => (0, delta),
-            _ => (0, 0),
-        };
+    let moved_aim = get_moved(
+        3,
+        split_commands.clone(),
+        |d, res| vec![d, d * res[2], 0],
+        |d, _| vec![0, 0, -d],
+        |d, _| vec![0, 0, d],
+    );
 
-        (res.0 + point.0, res.1 + point.1)
-    });
-
-    let total_moved_with_aim = split_commands.fold((0, 0, 0), |res, cmd| {
-        let delta = cmd.index(1).parse::<i32>().unwrap();
-
-        let point = match cmd.index(0) {
-            &"forward" => (delta, delta * res.2, 0),
-            &"up" => (0, 0, -delta),
-            &"down" => (0, 0, delta),
-            _ => (0, 0, 0),
-        };
-
-        (res.0 + point.0, res.1 + point.1, res.2 + point.2)
-    });
-
-    (
-        total_moved.0 * total_moved.1,
-        total_moved_with_aim.0 * total_moved_with_aim.1,
-    )
+    (moved[0] * moved[1], moved_aim[0] * moved_aim[1])
 }
