@@ -1,11 +1,16 @@
+use std::fs;
 mod day03;
 
 fn main() {
-    let gamma = day03::gamma();
-    let epsilon = day03::epsilon(gamma.clone());
+    let raw = fs::read_to_string("src/day03/diagnostic.txt").expect("Unable to read file");
+    let data: Vec<&str> = raw.split("\n").collect();
 
-    let gamma_int = day03::to_int(gamma.clone());
-    let epsilon_int = day03::to_int(epsilon);
+    let gamma_vec = day03::gamma(data.clone());
+    let epsilon = day03::epsilon(data.clone());
+    println!("{}", day03::to_int(gamma_vec) * epsilon);
 
-    println!("{:?}", gamma_int * &epsilon_int)
+    println!(
+        "{:?}",
+        day03::oxygen(data.clone()) * day03::co2(data.clone())
+    );
 }
