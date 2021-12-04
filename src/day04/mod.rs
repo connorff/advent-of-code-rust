@@ -35,14 +35,18 @@ pub fn bingo() -> i32 {
         })
         .collect();
 
+    let mut wins = vec!();
+
     for number in nums {
-        for board in &boards {
+        for (board_index, board) in boards.iter().enumerate() {
+            let board_won = wins.iter().any(|(bn, _)| *bn == board_index);
+
             for (row_index, row) in board.iter().enumerate() {
                 for (item_index, item) in row.iter().enumerate() {
                     if number == item.0 {
                         item.1.set(true);
 
-                        if move_wins(board.clone(), row_index, item_index) {
+                        if !board_won && move_wins(board.clone(), row_index, item_index) {
                             let unfilled_sum: i32 = board
                                 .iter()
                                 .flatten()
@@ -50,7 +54,7 @@ pub fn bingo() -> i32 {
                                 .map(|(s, _)| s.parse::<i32>().unwrap())
                                 .sum();
 
-                            return unfilled_sum * item.0.parse::<i32>().unwrap();
+                            wins.push((board_index, unfilled_sum * item.0.parse::<i32>().unwrap()));
                         }
                     }
                 }
@@ -58,5 +62,5 @@ pub fn bingo() -> i32 {
         }
     }
 
-    1
+    wins.last().unwrap().1
 }
