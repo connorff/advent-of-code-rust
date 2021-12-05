@@ -22,21 +22,32 @@ fn find_dangerous(graph: &Graph) -> Vec<&Point> {
 }
 
 fn populate_graph(graph: &mut Graph, segment: &Segment) {
-    if !(segment.0 .0 == segment.1 .0 || segment.0 .1 == segment.1 .1) {
+    let diff_x = segment.0 .0 - segment.1 .0;
+    let diff_y = segment.0 .1 - segment.1 .1;
+
+    let subtract_x = diff_x > 0;
+    let subtract_y = diff_y > 0;
+
+    let is_diagonal = diff_x.abs() == diff_y.abs();
+    let is_vertical = diff_x == 0;
+    let is_horizontal = diff_y == 0;
+
+    if !(is_vertical || is_horizontal || is_diagonal) {
         return;
     }
 
-    let is_vertical = segment.0 .0 == segment.1 .0;
-    let mut iter_bounds = if is_vertical {
-        [segment.0 .1, segment.1 .1]
-    } else {
-        [segment.0 .0, segment.1 .0]
-    };
-    iter_bounds.sort();
+    for num in 0..*[diff_x.abs(), diff_y.abs()].iter().max().unwrap() + 1 {
+        let x = if is_horizontal || is_diagonal {
+            segment.0 .0 + if subtract_x { -num } else { num }
+        } else {
+            segment.0 .0
+        };
 
-    for num in iter_bounds[0]..iter_bounds[1] + 1 {
-        let x = if is_vertical { segment.0 .0 } else { num };
-        let y = if is_vertical { num } else { segment.0 .1 };
+        let y = if is_vertical || is_diagonal {
+            segment.0 .1 + if subtract_y { -num } else { num }
+        } else {
+            segment.0 .1
+        };
 
         let pt_exists = find_point(graph, x, y).is_some();
         if !pt_exists {
