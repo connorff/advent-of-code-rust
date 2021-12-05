@@ -1,5 +1,5 @@
-mod day04;
+mod day05;
 
 fn main() {
-    println!("{}", day04::bingo());
+    println!("{}", day05::main());
 }
